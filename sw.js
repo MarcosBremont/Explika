@@ -1,6 +1,6 @@
 /* Explika · service worker: deja la app disponible sin conexión.
    Sube el número de VERSION cada vez que publiques cambios para que los usuarios reciban la versión nueva. */
-const VERSION = 'explika-v5';
+const VERSION = 'explika-v6';
 const ARCHIVOS = [
   './', 'index.html', 'manifest.webmanifest', 'css/app.css',
   'js/util.js', 'js/props.js', 'js/entornos.js', 'js/iconos.js', 'js/motor.js', 'js/ejemplos.js', 'js/guion.js', 'js/ideas.js', 'js/exportar.js', 'js/app.js',

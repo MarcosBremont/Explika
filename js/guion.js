@@ -77,6 +77,73 @@ E.leerGuion=function(entrada){
   res.guion=g; return res;
 };
 
+/* ---------- formas de hablar: cambian cómo se redacta la narración, no lo que se explica ---------- */
+E.ESTILOS={
+  neutro:{ nombre:'Neutro', corto:'español neutro, claro y directo',
+    reglas:[ 'Frases cortas y limpias, sin muletillas ni regionalismos.' ] },
+  informal:{ nombre:'Informal, como a un amigo', corto:'informal y conversacional, como explicándole a un amigo',
+    reglas:[
+      'Tutea y habla directo al espectador, con preguntas ("¿te ha pasado?", "¿sabes por qué?").',
+      'Usa conectores de conversación al empezar las frases: "Mira,", "Bueno,", "O sea,", "Por eso", "Entonces".',
+      'Las frases pueden ser un poco más largas, con ritmo de alguien que habla, no que lee.',
+      'Sin regionalismos marcados y sin groserías.' ] },
+  dominicano:{ nombre:'Dominicano conversacional', corto:'español dominicano conversacional, como habla un creador dominicano explicándole algo a un amigo',
+    reglas:[
+      'Di el pronombre "tú" aunque no haga falta: "tú llevas meses", "lo que tú le exiges", "si tú subes".',
+      'Empieza frases con conectores hablados: "Déjame adivinar,", "Bueno,", "Mira,", "O sea,", "Por eso es que", "Ahora".',
+      'Marca la consecuencia con "entonces": "Si el reto es nuevo, entonces él se vuelve más fuerte."',
+      'Usa palabras de todos los días ("gym" en vez de gimnasio, "dale", "ve y") y cierra con una invitación hablada, no con una orden seca.',
+      'Suena dominicano por el ritmo y las muletillas, no por exagerar: nada de jerga forzada en cada frase, ni groserías, ni palabras recortadas ("pa\'", "ta"). Se escribe completo.' ],
+    ejemplos:[
+      ['Llevas meses con el mismo peso.', 'Déjame adivinar, tú llevas meses con el mismo peso.'],
+      ['Imagina que tu músculo se adapta a lo que le exiges.', 'Bueno, imagina que tu músculo se adapta a lo que tú le exiges.'],
+      ['Si el reto es nuevo, se vuelve más fuerte.', 'Si el reto es nuevo, entonces él se vuelve más fuerte.'],
+      ['Por eso subes poco a poco: más peso, más repeticiones o mejor técnica.', 'Por eso es que subes poco a poco: o sea, más peso, más repeticiones o mejor técnica.'],
+      ['Pero si subes demasiado rápido, te puedes lesionar.', 'Pero si tú subes demasiado rápido, entonces te puedes lesionar.'],
+      ['Sígueme y comenta tu rutina.', 'Ahora dale, ve y sígueme y comenta cuál es la rutina que tú estás llevando ahora en el gym.'] ] },
+  propio:{ nombre:'Mi propio estilo', corto:'la forma de hablar del ejemplo que doy abajo' }
+};
+/* líneas del bloque "FORMA DE HABLAR" para un prompt. f = { estilo, muestra, idioma } */
+E.bloqueEstilo=function(f){
+  var id=E.ESTILOS[f.estilo] ? f.estilo : 'neutro', muestra=String(f.muestra||'').trim(), L=[];
+  if(id==='propio' && !muestra) id='informal';
+  if(id==='dominicano' && f.idioma && !/espa/i.test(f.idioma)) id='informal';       // el estilo dominicano solo aplica en español
+  var e=E.ESTILOS[id];
+  L.push('FORMA DE HABLAR: '+e.corto+'.');
+  L.push('Aplica solo a la narración (el "texto" de cada línea, que también es el subtítulo). Los estados, etiquetas y datos en pantalla siguen cortos y neutros.');
+  if(id==='propio'){
+    L.push('- Imita la forma de hablar de este ejemplo mío: vocabulario, muletillas, largo de las frases, cómo abre y cómo cierra. No copies su contenido, solo el estilo.');
+    L.push('EJEMPLO DE CÓMO HABLO:'); L.push('"""'); L.push(muestra.slice(0,2500)); L.push('"""');
+  } else {
+    e.reglas.forEach(function(r){ L.push('- '+r); });
+    if(e.ejemplos){ L.push('Ejemplos del cambio (versión neutra -> como debe quedar):'); e.ejemplos.forEach(function(p){ L.push('  "'+p[0]+'" -> "'+p[1]+'"'); }); }
+  }
+  if(id!=='neutro'){
+    L.push('- El estilo cambia cómo se dice, no lo que se dice: los datos y el orden de la explicación siguen exactos.');
+    L.push('- Las muletillas y conectores cuentan dentro del total de palabras. Ortografía correcta: tildes y signos de apertura (¿ ¡).');
+  }
+  return { id:id, lineas:L };
+};
+/* prompt para reescribir la narración de un guion ya hecho con otra forma de hablar, sin tocar escenas ni efectos */
+E.promptAdaptar=function(guionTexto, f){
+  var b=E.bloqueEstilo(f||{}), json=String(guionTexto||'').trim(), L=[];
+  try{ var r=E.leerGuion(json); if(r.guion){ var o=JSON.parse(json.slice(json.indexOf('{'), json.lastIndexOf('}')+1)); json=JSON.stringify(o); } }catch(e){}
+  L.push('Tengo este guion en JSON para el motor de video "Explika". Reescribe SOLO la narración (el "texto" de cada elemento de "lineas") con la forma de hablar que indico. No cambies lo que se explica ni el orden de las ideas.');
+  L.push('');
+  b.lineas.forEach(function(x){ L.push(x); });
+  L.push('');
+  L.push('REGLAS');
+  L.push('- Responde únicamente con el JSON completo y válido: sin texto antes ni después, sin comentarios y sin bloque de código.');
+  L.push('- No cambies "entorno", "objetos", "estado", "camara" ni el contenido de los "efectos" (títulos de etiquetas, datos e iconos quedan igual).');
+  L.push('- Cada línea sigue teniendo de 2 a 5 palabras. Si una frase queda más larga, repártela en más líneas: puedes añadir líneas nuevas que solo lleven "texto".');
+  L.push('- Cada "efectos" y cada "camara" debe quedar en la línea donde se nombra ese concepto, como en el original.');
+  L.push('- La línea que cierra una frase termina en punto, signo de interrogación o dos puntos.');
+  L.push('');
+  L.push('GUION');
+  L.push(json);
+  return L.join('\n');
+};
+
 /* ---------- prompt ---------- */
 var DOC_EFECTOS=[
   '{"tipo":"estado","texto":"EMITIENDO","color":"azul"}  cambia la píldora de estado',
@@ -103,7 +170,7 @@ E.catalogo=function(){
   return { entornos:e, objetos:o, efectos:DOC_EFECTOS, iconos:Object.keys(E.ICONOS) };
 };
 E.crearPrompt=function(f){
-  var c=E.catalogo(), dur=num(f.duracion,60), pal=Math.round(dur/0.58), L=[];
+  var c=E.catalogo(), dur=num(f.duracion,60), pal=Math.round(dur/0.58), L=[], est=E.bloqueEstilo(f);
   L.push('Eres guionista y director de videos explicativos 3D verticales (9:16) de estilo minimalista low-poly: escena nocturna oscura, un solo objeto protagonista en color crema, personas como maniquíes grises sin rostro, y los conceptos invisibles dibujados con domos, anillos, líneas, etiquetas e iconos.');
   L.push('');
   L.push('Escribe el guion completo del video como UN SOLO objeto JSON para el motor "Explika". Responde únicamente con el JSON: sin texto antes ni después, sin comentarios y sin bloque de código.');
@@ -120,8 +187,10 @@ E.crearPrompt=function(f){
   L.push('NARRACIÓN');
   L.push('- Primera frase: un gancho con una contradicción o una pregunta ("X no tiene A ni B. Entonces, ¿cómo hace Y?").');
   L.push('- Después: "Imagina que...", el mecanismo paso a paso, cómo escala o qué pasa en el caso límite, y un cierre que corrige la idea equivocada ("Así que X no es A. Es B.").');
-  L.push('- Frases cortas y habladas. Datos correctos: no inventes cifras ni mecanismos.');
+  L.push(est.id==='neutro' ? '- Frases cortas y habladas. Datos correctos: no inventes cifras ni mecanismos.' : '- Redacta como se indica en FORMA DE HABLAR. Datos correctos: no inventes cifras ni mecanismos.');
   L.push('- Cada elemento de "lineas" es un trozo de 2 a 5 palabras que se muestra como subtítulo. Una frase se reparte en varias líneas seguidas. La línea que cierra una frase termina en punto, signo de interrogación o dos puntos; el motor hace la pausa solo.');
+  L.push('');
+  est.lineas.forEach(function(x){ L.push(x); });
   L.push('');
   L.push('ESCENAS');
   L.push('- De 3 a 6 escenas. Una escena es un lugar. Mientras el lugar no cambie, sigue en la misma escena y usa efectos y movimientos de cámara por línea.');

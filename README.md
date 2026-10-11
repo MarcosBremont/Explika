@@ -6,11 +6,13 @@ Tú pones el tema; una IA escribe el guion en JSON; la app lo convierte en video
 
 ## Cómo se usa
 
-1. **Tema.** Escribe el tema y las especificaciones. Si no tienes tema, elige una categoría y pulsa "Generar idea"; "Usar este tema" lo coloca en el campo. Pulsa "Copiar prompt".
+1. **Tema.** Escribe el tema y las especificaciones. Elige también la forma de hablar de la narración (neutra, informal, dominicana conversacional o tu propio estilo con un ejemplo). Si no tienes tema, elige una categoría y pulsa "Generar idea"; "Usar este tema" lo coloca en el campo. Pulsa "Copiar prompt".
 2. Pega el prompt en Claude, Gemini o ChatGPT y copia el JSON que devuelva.
 3. **Guion.** Pega el JSON y pulsa "Cargar guion". Si algo no se entiende, la app lo avisa y sigue con lo que sí entendió.
 4. **Ajustes.** Ritmo de la narración, colores y tu usuario como marca de agua (a un lado, cambiando de sitio, al centro o solo al final).
 5. **Exportar.** Genera el MP4 (sin voz) y copia la narración con sus tiempos para grabar la voz.
+
+Si el guion está bien pero no suena a ti, en la pestaña Guion hay un botón que copia un prompt para reescribir solo la narración con tu forma de hablar, sin tocar escenas ni efectos.
 
 Si un video no quedó como querías, lo más rápido es pedirle el cambio a la misma IA ("acerca más la cámara en la escena 2", "cambia el entorno a oficina") y volver a pegar el JSON.
 

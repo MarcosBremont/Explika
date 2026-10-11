@@ -71,7 +71,11 @@
           <select id="fIdioma"><option value="español" selected>Español</option><option value="inglés">Inglés</option><option value="portugués">Portugués</option><option value="francés">Francés</option></select></label>
         <label class="campo"><span>Tono</span>
           <select id="fTono"><option value="claro y tranquilo" selected>Claro y tranquilo</option><option value="enérgico y directo">Enérgico y directo</option><option value="curioso, con una pizca de humor">Curioso, con humor ligero</option><option value="serio y preciso">Serio y preciso</option><option value="didáctico, para estudiantes">Didáctico, para clase</option></select></label>
-        <label class="campo"><span>Público <i>opcional</i></span>
+        <label class="campo"><span>Forma de hablar</span>
+          <select id="fEstilo"><option value="neutro" selected>Neutro</option><option value="informal">Informal, como a un amigo</option><option value="dominicano">Dominicano conversacional</option><option value="propio">Mi propio estilo (con un ejemplo)</option></select></label>
+        <label class="campo ancho" id="campoMuestra" hidden><span>Ejemplo de cómo hablas</span>
+          <textarea id="fMuestra" rows="4" placeholder="Pega un guion o párrafo tuyo, escrito tal como lo dirías en voz alta. La IA copia el estilo, no el contenido."></textarea></label>
+        <label class="campo ancho"><span>Público <i>opcional</i></span>
           <input id="fPublico" type="text" placeholder="Estudiantes de bachillerato" autocomplete="off"></label>
         <label class="campo ancho"><span>Puntos que debe incluir <i>opcional</i></span>
           <textarea id="fPuntos" rows="2" placeholder="Mencionar los satélites y por qué hacen falta al menos cuatro"></textarea></label>
@@ -106,6 +110,13 @@
         <button class="btn sec" id="bLimpiar" type="button">Vaciar</button>
       </div>
       <div class="mensajes" id="mensajes" role="status" aria-live="polite"></div>
+      <div class="ideas">
+        <p class="ayuda">¿El guion está bien pero no suena a ti? Copia este prompt, pégalo en la IA y carga el JSON que devuelva: reescribe solo la narración con la forma de hablar elegida en la pestaña Tema y deja igual las escenas y los efectos.</p>
+        <div class="acciones">
+          <button class="btn sec" id="bAdaptar" type="button">Copiar prompt para adaptar la narración</button>
+          <span class="nota" id="notaAdaptar" role="status"></span>
+        </div>
+      </div>
     </div>
 
     <!-- 3. Ajustes -->

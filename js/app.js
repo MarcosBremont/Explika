@@ -38,14 +38,16 @@ TABS.forEach(function(n,i){
 });
 
 /* ---------- paso 1: prompt ---------- */
-function datosTema(){ return { tema:$('fTema').value.trim(), duracion:+$('fDur').value, idioma:$('fIdioma').value, tono:$('fTono').value, publico:$('fPublico').value.trim(), puntos:$('fPuntos').value.trim(), cierre:$('fCierre').value.trim(), marca:$('fMarca').value.trim() }; }
+function datosTema(){ return { tema:$('fTema').value.trim(), duracion:+$('fDur').value, idioma:$('fIdioma').value, tono:$('fTono').value, estilo:$('fEstilo').value, muestra:$('fMuestra').value.trim(), publico:$('fPublico').value.trim(), puntos:$('fPuntos').value.trim(), cierre:$('fCierre').value.trim(), marca:$('fMarca').value.trim() }; }
 function refrescarPrompt(){ $('tPrompt').value=E.crearPrompt(datosTema()); guardar('e3d.tema',datosTema()); }
 $('bCopiarPrompt').addEventListener('click',function(){
   if(!$('fTema').value.trim()){ nota($('notaPrompt'),'Escribe primero el tema del video.','mal'); $('fTema').focus(); return; }
   refrescarPrompt(); copiar($('tPrompt').value,$('notaPrompt'));
 });
 $('bVerPrompt').addEventListener('click',function(){ var ta=$('tPrompt'), ver=ta.hidden; if(ver) refrescarPrompt(); ta.hidden=!ver; this.setAttribute('aria-expanded',ver?'true':'false'); this.textContent=ver?'Ocultar prompt':'Ver prompt'; });
-$('formTema').addEventListener('input',function(){ if(!$('tPrompt').hidden) refrescarPrompt(); });
+function verMuestra(){ $('campoMuestra').hidden = $('fEstilo').value!=='propio'; }
+$('formTema').addEventListener('input',function(){ verMuestra(); if(!$('tPrompt').hidden) refrescarPrompt(); else guardar('e3d.tema',datosTema()); });
+$('fEstilo').addEventListener('change',function(){ verMuestra(); guardar('e3d.tema',datosTema()); });
 $('formTema').addEventListener('submit',function(e){ e.preventDefault(); });
 
 /* ---------- ideas de tema por categoría (banco local, sin repetir hasta agotar la categoría) ---------- */
@@ -113,6 +115,12 @@ function cargarTexto(txt,opc){
 }
 $('bCargar').addEventListener('click',function(){ var txt=$('tGuion').value; if(!txt.trim()){ mensajes({errores:['Pega primero el JSON del guion.'],avisos:[]}); return; } if(cargarTexto(txt,{nuevo:true}) && window.matchMedia('(max-width:899px)').matches) $('marco').scrollIntoView({behavior:'smooth',block:'start'}); });
 $('bLimpiar').addEventListener('click',function(){ $('tGuion').value=''; $('mensajes').textContent=''; $('tGuion').focus(); });
+$('bAdaptar').addEventListener('click',function(){
+  var txt=$('tGuion').value.trim() || S.texto, d=datosTema();
+  if(!txt){ nota($('notaAdaptar'),'Carga o pega primero un guion.','mal'); return; }
+  if(d.estilo==='propio' && !d.muestra){ nota($('notaAdaptar'),'Falta tu ejemplo: pégalo en la pestaña Tema, en "Ejemplo de cómo hablas".','mal'); return; }
+  copiar(E.promptAdaptar(txt,d),$('notaAdaptar'));
+});
 E.EJEMPLOS.forEach(function(ej){ var o=document.createElement('option'); o.value=ej.id; o.textContent=ej.nombre; $('sEjemplo').appendChild(o); });
 $('sEjemplo').addEventListener('change',function(){ var id=this.value; if(!id) return; var ej=E.EJEMPLOS.filter(function(x){ return x.id===id; })[0]; var txt=JSON.stringify(ej.guion,null,1); $('tGuion').value=txt; cargarTexto(txt,{nuevo:true}); this.value=''; });
 
@@ -217,8 +225,9 @@ function iniciar(){
   motor.conectar($('lienzo'));
   var tema=leer('e3d.tema',null);
   if(tema){ $('fTema').value=tema.tema||''; $('fPublico').value=tema.publico||''; $('fPuntos').value=tema.puntos||''; $('fCierre').value=tema.cierre||''; $('fMarca').value=tema.marca||'';
-    ['fDur','fIdioma','fTono'].forEach(function(id,i){ var v=[tema.duracion,tema.idioma,tema.tono][i]; if(v!=null){ $(id).value=String(v); if($(id).selectedIndex<0) $(id).selectedIndex=0; } }); }
-  pintarAjustes(); ajustarCalidad(true);
+    $('fMuestra').value=tema.muestra||'';
+    ['fDur','fIdioma','fTono','fEstilo'].forEach(function(id,i){ var v=[tema.duracion,tema.idioma,tema.tono,tema.estilo][i]; if(v!=null){ $(id).value=String(v); if($(id).selectedIndex<0) $(id).selectedIndex=0; } }); }
+  verMuestra(); pintarAjustes(); ajustarCalidad(true);
   var reduce=window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var ultimo=leer('e3d.ultimo',null), ok=false;
   if(typeof ultimo==='string' && ultimo) { ok=cargarTexto(ultimo,{nuevo:true,silencio:true,pausado:reduce}); if(ok) $('tGuion').value=ultimo; }
