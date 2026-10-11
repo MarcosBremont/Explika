@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Explika</title>
+<meta name="description" content="Crea videos explicativos 3D verticales a partir de un tema: genera el prompt, pega el guion y exporta el MP4.">
+<meta name="theme-color" content="#090c11">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<header class="barra">
+  <div class="marca"><span class="logo" aria-hidden="true"></span><h1>Explika</h1></div>
+  <p class="lema">Videos explicativos 3D a partir de un tema</p>
+  <button class="btn sec chico" id="bInstalar" type="button" hidden>Instalar app</button>
+</header>
+
+<main class="app">
+
+  <section class="visor" aria-label="Vista previa">
+    <div class="marco" id="marco">
+      <canvas id="lienzo" width="540" height="960" aria-label="Vista previa del video"></canvas>
+    </div>
+    <div class="transporte">
+      <button class="btn sec" id="bPlay" type="button">Pausa</button>
+      <button class="btn sec" id="bInicio" type="button" aria-label="Volver al inicio">Inicio</button>
+      <input id="scrub" type="range" min="0" max="1" step="0.01" value="0" aria-label="Posición del video">
+      <span class="reloj" id="reloj">0:00 / 0:00</span>
+    </div>
+    <p class="resumen" id="resumen"></p>
+  </section>
+
+  <section class="panel" aria-label="Pasos para crear el video">
+    <div class="pestanas" role="tablist" aria-label="Pasos">
+      <button role="tab" id="tab-tema" aria-controls="hoja-tema" aria-selected="true" type="button"><b>1</b> Tema</button>
+      <button role="tab" id="tab-guion" aria-controls="hoja-guion" aria-selected="false" type="button"><b>2</b> Guion</button>
+      <button role="tab" id="tab-ajustes" aria-controls="hoja-ajustes" aria-selected="false" type="button"><b>3</b> Ajustes</button>
+      <button role="tab" id="tab-exportar" aria-controls="hoja-exportar" aria-selected="false" type="button"><b>4</b> Exportar</button>
+    </div>
+
+    <!-- 1. Tema -->
+    <div class="hoja" id="hoja-tema" role="tabpanel" aria-labelledby="tab-tema">
+      <p class="ayuda">Describe el video. La app arma un prompt para que una IA (Claude, Gemini o ChatGPT) escriba el guion en el formato que este motor entiende.</p>
+      <div class="ideas">
+        <div class="ideas-fila">
+          <label class="campo"><span>¿Sin tema? Elige una categoría</span>
+            <input id="fCategoria" type="text" list="dlCategorias" placeholder="Tecnología, salud, dinero… o vacío para cualquiera" autocomplete="off"></label>
+          <datalist id="dlCategorias"></datalist>
+          <button class="btn sec" id="bIdea" type="button">Generar idea</button>
+        </div>
+        <div class="idea" id="cajaIdea" role="status" aria-live="polite" hidden>
+          <span class="idea-cat" id="ideaCat"></span>
+          <p class="idea-txt" id="ideaTxt"></p>
+          <div class="acciones">
+            <button class="btn pri chico" id="bUsarIdea" type="button">Usar este tema</button>
+            <button class="btn sec chico" id="bPromptIdeas" type="button">Copiar prompt de ideas</button>
+            <span class="nota" id="notaIdea" role="status"></span>
+          </div>
+        </div>
+      </div>
+      <form id="formTema" class="campos">
+        <label class="campo ancho"><span>Tema del video</span>
+          <input id="fTema" type="text" placeholder="Cómo funciona el GPS" autocomplete="off"></label>
+        <label class="campo"><span>Duración</span>
+          <select id="fDur"><option value="30">30 segundos</option><option value="45">45 segundos</option><option value="60" selected>1 minuto</option><option value="75">1 min 15 s</option><option value="90">1 min 30 s</option></select></label>
+        <label class="campo"><span>Idioma</span>
+          <select id="fIdioma"><option value="español" selected>Español</option><option value="inglés">Inglés</option><option value="portugués">Portugués</option><option value="francés">Francés</option></select></label>
+        <label class="campo"><span>Tono</span>
+          <select id="fTono"><option value="claro y tranquilo" selected>Claro y tranquilo</option><option value="enérgico y directo">Enérgico y directo</option><option value="curioso, con una pizca de humor">Curioso, con humor ligero</option><option value="serio y preciso">Serio y preciso</option><option value="didáctico, para estudiantes">Didáctico, para clase</option></select></label>
+        <label class="campo"><span>Público <i>opcional</i></span>
+          <input id="fPublico" type="text" placeholder="Estudiantes de bachillerato" autocomplete="off"></label>
+        <label class="campo ancho"><span>Puntos que debe incluir <i>opcional</i></span>
+          <textarea id="fPuntos" rows="2" placeholder="Mencionar los satélites y por qué hacen falta al menos cuatro"></textarea></label>
+        <label class="campo"><span>Cierre <i>opcional</i></span>
+          <input id="fCierre" type="text" placeholder="Invitar a seguir la cuenta" autocomplete="off"></label>
+        <label class="campo"><span>Tu usuario <i>opcional</i></span>
+          <input id="fMarca" type="text" placeholder="@tu_usuario" autocomplete="off"></label>
+      </form>
+      <div class="acciones">
+        <button class="btn pri" id="bCopiarPrompt" type="button">Copiar prompt</button>
+        <button class="btn sec" id="bVerPrompt" type="button" aria-expanded="false">Ver prompt</button>
+        <span class="nota" id="notaPrompt" role="status"></span>
+      </div>
+      <textarea id="tPrompt" class="mono" rows="10" readonly hidden aria-label="Prompt generado"></textarea>
+      <ol class="pasos">
+        <li>Escribe el tema o genera una idea por categoría.</li>
+        <li>Copia el prompt y pégalo en la IA que prefieras.</li>
+        <li>Copia el JSON que te devuelva.</li>
+        <li>Pégalo en la pestaña Guion y pulsa Cargar guion.</li>
+      </ol>
+    </div>
+
+    <!-- 2. Guion -->
+    <div class="hoja" id="hoja-guion" role="tabpanel" aria-labelledby="tab-guion" hidden>
+      <p class="ayuda">Pega aquí el JSON que te devolvió la IA. También puedes abrir un ejemplo para ver cómo se escribe.</p>
+      <label class="campo ancho"><span>Ejemplos</span>
+        <select id="sEjemplo"><option value="">Elegir un ejemplo…</option></select></label>
+      <label class="campo ancho"><span>Guion en JSON</span>
+        <textarea id="tGuion" class="mono" rows="12" spellcheck="false" placeholder='{ "titulo": "…", "escenas": [ … ] }'></textarea></label>
+      <div class="acciones">
+        <button class="btn pri" id="bCargar" type="button">Cargar guion</button>
+        <button class="btn sec" id="bLimpiar" type="button">Vaciar</button>
+      </div>
+      <div class="mensajes" id="mensajes" role="status" aria-live="polite"></div>
+    </div>
+
+    <!-- 3. Ajustes -->
+    <div class="hoja" id="hoja-ajustes" role="tabpanel" aria-labelledby="tab-ajustes" hidden>
+      <p class="ayuda">Los cambios se aplican al momento sobre el guion cargado.</p>
+      <div class="campos">
+        <label class="campo ancho"><span>Ritmo de la narración <output id="oRitmo">0.38 s por palabra</output></span>
+          <input id="rRitmo" type="range" min="0.28" max="0.52" step="0.01" value="0.38"></label>
+        <label class="campo ancho"><span>Usuario al final del video</span>
+          <input id="iMarca" type="text" placeholder="@tu_usuario" autocomplete="off"></label>
+      </div>
+      <fieldset class="colores">
+        <legend>Colores</legend>
+        <label><input type="color" id="cFondo" value="#0f141c"><span>Fondo</span></label>
+        <label><input type="color" id="cCrema" value="#f2eee3"><span>Protagonista</span></label>
+        <label><input type="color" id="cAzul" value="#3b82f6"><span>Señal</span></label>
+        <label><input type="color" id="cVerde" value="#34d399"><span>Confirmado</span></label>
+        <label><input type="color" id="cAmbar" value="#f5a623"><span>Detalle</span></label>
+        <label><input type="color" id="cRojo" value="#ef5350"><span>Problema</span></label>
+      </fieldset>
+      <div class="acciones"><button class="btn sec" id="bRestablecer" type="button">Restablecer ajustes</button></div>
+    </div>
+
+    <!-- 4. Exportar -->
+    <div class="hoja" id="hoja-exportar" role="tabpanel" aria-labelledby="tab-exportar" hidden>
+      <p class="ayuda">El video se genera en tu dispositivo a 1080 × 1920, sin voz. Añade la narración después en tu editor.</p>
+      <div class="campos">
+        <label class="campo"><span>Cuadros por segundo</span>
+          <select id="sFps"><option value="30" selected>30 fps</option><option value="60">60 fps</option></select></label>
+      </div>
+      <div class="acciones">
+        <button class="btn pri" id="bExportar" type="button">Exportar MP4</button>
+        <button class="btn sec" id="bCancelar" type="button" hidden>Cancelar</button>
+        <a class="btn sec" id="aDescarga" hidden>Descargar otra vez</a>
+      </div>
+      <div class="progreso" id="progreso" hidden><div id="barraProg"></div></div>
+      <p class="nota" id="notaExp" role="status"></p>
+
+      <h2>Narración</h2>
+      <p class="ayuda">Texto para grabar tu voz o pasarlo a un generador de voz, con el segundo en que empieza cada frase.</p>
+      <pre class="mono narracion" id="preNarracion"></pre>
+      <div class="acciones"><button class="btn sec" id="bNarracion" type="button">Copiar narración</button><span class="nota" id="notaNarr" role="status"></span></div>
+
+      <h2>Proyectos guardados</h2>
+      <div class="acciones"><button class="btn sec" id="bGuardar" type="button">Guardar este guion</button><span class="nota" id="notaGuardar" role="status"></span></div>
+      <ul class="proyectos" id="lProyectos"></ul>
+    </div>
+  </section>
+
+</main>
+
+<script src="vendor/three.min.js"></script>
+<script src="vendor/mp4-muxer.js"></script>
+<script src="js/util.js"></script>
+<script src="js/props.js"></script>
+<script src="js/entornos.js"></script>
+<script src="js/iconos.js"></script>
+<script src="js/motor.js"></script>
+<script src="js/ejemplos.js"></script>
+<script src="js/guion.js"></script>
+<script src="js/ideas.js"></script>
+<script src="js/exportar.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
