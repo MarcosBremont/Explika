@@ -9,7 +9,7 @@ Tú pones el tema; una IA escribe el guion en JSON; la app lo convierte en video
 1. **Tema.** Escribe el tema y las especificaciones. Si no tienes tema, elige una categoría y pulsa "Generar idea"; "Usar este tema" lo coloca en el campo. Pulsa "Copiar prompt".
 2. Pega el prompt en Claude, Gemini o ChatGPT y copia el JSON que devuelva.
 3. **Guion.** Pega el JSON y pulsa "Cargar guion". Si algo no se entiende, la app lo avisa y sigue con lo que sí entendió.
-4. **Ajustes.** Ritmo de la narración, colores y tu usuario al final.
+4. **Ajustes.** Ritmo de la narración, colores y tu usuario como marca de agua (a un lado, cambiando de sitio, al centro o solo al final).
 5. **Exportar.** Genera el MP4 (sin voz) y copia la narración con sus tiempos para grabar la voz.
 
 Si un video no quedó como querías, lo más rápido es pedirle el cambio a la misma IA ("acerca más la cámara en la escena 2", "cambia el entorno a oficina") y volver a pegar el JSON.
@@ -25,6 +25,8 @@ Todas las rutas son relativas, así que funciona igual en `usuario.github.io/exp
 Cada vez que publiques cambios, sube el número de `VERSION` en `sw.js` para que quien ya la tenga instalada reciba la versión nueva.
 
 ## Requisitos
+
+- **HTTPS obligatorio.** Los navegadores solo permiten exportar video e instalar la app en páginas https. Si se abre por http, la app intenta pasar sola a https; si el sitio no lo tiene, la vista previa funciona pero el botón de exportar queda desactivado. GitHub Pages ya sirve por https (activa "Enforce HTTPS" en Settings > Pages); en otro hosting, activa el certificado SSL y la redirección a https.
 
 - Vista previa: cualquier navegador moderno con WebGL.
 - Exportar MP4: Chrome o Edge (escritorio o Android) y Safari reciente. Usa WebCodecs; no graba la pantalla, pinta y codifica cada cuadro, así que el video sale fluido aunque el equipo sea lento.

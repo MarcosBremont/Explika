@@ -114,8 +114,16 @@
       <div class="campos">
         <label class="campo ancho"><span>Ritmo de la narración <output id="oRitmo">0.38 s por palabra</output></span>
           <input id="rRitmo" type="range" min="0.28" max="0.52" step="0.01" value="0.38"></label>
-        <label class="campo ancho"><span>Usuario al final del video</span>
+        <label class="campo"><span>Tu usuario (marca de agua)</span>
           <input id="iMarca" type="text" placeholder="@tu_usuario" autocomplete="off"></label>
+        <label class="campo"><span>Dónde aparece</span>
+          <select id="sMarca">
+            <option value="lado" selected>A un lado, todo el video</option>
+            <option value="mueve">Cambia de sitio</option>
+            <option value="centro">Al centro, todo el video</option>
+            <option value="final">Solo al final</option>
+          </select></label>
+        <p class="ayuda campo ancho">Tu usuario queda dentro del video exportado. "Cambia de sitio" es la opción más difícil de recortar o tapar.</p>
       </div>
       <fieldset class="colores">
         <legend>Colores</legend>

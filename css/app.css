@@ -71,6 +71,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 .btn:disabled{ opacity:.45; cursor:default; }
 .nota{ color:var(--tenue); font-size:12px; }
 .nota.ok{ color:var(--verde); } .nota.mal{ color:var(--rojo); }
+.nota a{ color:var(--texto); overflow-wrap:anywhere; }
 
 .pasos{ margin:0; padding-left:20px; color:var(--tenue); display:flex; flex-direction:column; gap:4px; }
 .mensajes{ display:flex; flex-direction:column; gap:8px; }

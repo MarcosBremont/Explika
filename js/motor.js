@@ -15,7 +15,10 @@ var PLANOS={ detalle:{k:0.62,ke:0.45,el:10}, primer_plano:{k:1.0,ke:0.7,el:12}, 
 var ANGULOS={ frente:0, derecha:30, izquierda:-30, lateral:78, lateral_izquierda:-78, atras:180 };
 var FUENTE={ cap:'600 50px Inter, system-ui, sans-serif', lab:'600 34px Inter, system-ui, sans-serif',
   sub:'500 21px "JetBrains Mono", ui-monospace, monospace', pil:'700 24px "JetBrains Mono", ui-monospace, monospace',
-  datoSub:'500 26px "JetBrains Mono", ui-monospace, monospace' };
+  datoSub:'500 26px "JetBrains Mono", ui-monospace, monospace', marca:'600 30px Inter, system-ui, sans-serif' };
+/* posiciones de la marca de agua [x, y, alineación]: libres de etiquetas, iconos, estado y subtítulos */
+var MARCA_POS={ lado:[68,1236,'left'], centro:[540,1150,'center'] };
+var MARCA_RUTA=[ [68,1236,'left'], [1012,236,'right'], [540,1150,'center'], [68,236,'left'], [1012,1236,'right'] ];
 var TXT='#eef1f5', TENUE='#8a96a8', PILDORA='#080b10';
 E.PLANOS=PLANOS; E.ANGULOS=ANGULOS;
 
@@ -440,6 +443,21 @@ Motor.prototype.interfaz=function(rt,t){
   // viñeta
   if(!this.vig){ this.vig=c.createRadialGradient(W/2,H*0.42,H*0.38,W/2,H*0.42,H*0.8); this.vig.addColorStop(0,'rgba(4,6,10,0)'); this.vig.addColorStop(1,'rgba(4,6,10,0.55)'); }
   c.fillStyle=this.vig; c.fillRect(0,0,W,H);
+
+  // marca de agua: el usuario visible durante todo el video (modo "lado", "centro" o "mueve"; "final" = solo al cierre)
+  var modo=g.marcaModo||'lado';
+  if(g.marca && modo!=='final'){
+    var mtx=String(g.marca), ma=0.5, mp=MARCA_POS[modo]||MARCA_POS.lado;
+    if(modo==='mueve'){                                  // cambia de sitio cada 7 s para que no se pueda recortar ni tapar con un parche fijo
+      var ciclo=7, fase=t%ciclo; mp=MARCA_RUTA[Math.floor(t/ciclo)%MARCA_RUTA.length];
+      ma*=Math.min(1,fase/0.5,(ciclo-fase)/0.5);
+    } else if(modo==='lado') ma*=1-seg(t,this.dur-2.7,this.dur-2.4);   // al final la releva la píldora, que queda justo debajo
+    if(ma>0.004){
+      c.save(); c.font=FUENTE.marca; c.textAlign=mp[2]; c.globalAlpha=ma;
+      c.shadowColor='rgba(0,0,0,0.75)'; c.shadowBlur=8; c.fillStyle=TXT; c.fillText(mtx,mp[0],mp[1]);
+      c.restore();
+    }
+  }
 
   // etiquetas
   var vis=0;

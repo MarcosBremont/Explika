@@ -14,7 +14,14 @@ function copiar(txt,el){
   if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(listo,manual); else manual();
 }
 
-var AJ_BASE={ ritmo:0.38, marca:'', paleta:{} };
+/* Si la app se abrió por http y el mismo sitio responde por https, se pasa sola a https:
+   sin conexión segura el navegador no deja exportar video ni instalar la app. */
+var URL_SEGURA='https://'+location.host+location.pathname+location.search+location.hash;
+if(location.protocol==='http:' && !/^(localhost$|127\.|\[::1\]$)/.test(location.hostname) && window.fetch){
+  fetch(URL_SEGURA,{ mode:'no-cors', cache:'no-store' }).then(function(){ location.replace(URL_SEGURA); }).catch(function(){});
+}
+
+var AJ_BASE={ ritmo:0.38, marca:'', marcaModo:'lado', paleta:{} };
 var motor=null, S={ texto:'', titulo:'', t:0, playing:false, sucio:true, exportando:false, ajustes:Object.assign({},AJ_BASE,leer('e3d.ajustes',{})), ultimo:0 };
 if(!S.ajustes.paleta || typeof S.ajustes.paleta!=='object') S.ajustes.paleta={};
 var COLORES={ cFondo:'fondo', cCrema:'crema', cAzul:'azul', cVerde:'verde', cAmbar:'ambar', cRojo:'rojo' };
@@ -90,7 +97,7 @@ function cargarTexto(txt,opc){
     if(g.marca && !S.ajustes.marca) S.ajustes.marca=g.marca;
     pintarAjustes();
   }
-  g.ritmo=S.ajustes.ritmo; g.marca=S.ajustes.marca||g.marca; g.paleta=Object.assign({},g.paleta,S.ajustes.paleta);
+  g.ritmo=S.ajustes.ritmo; g.marca=S.ajustes.marca||g.marca; g.marcaModo=S.ajustes.marcaModo||'lado'; g.paleta=Object.assign({},g.paleta,S.ajustes.paleta);
   var avisos;
   try{ avisos=motor.cargar(g); }
   catch(e){ res.errores.push('El guion se leyó, pero falló al armar la escena: '+e.message); if(!opc.silencio) mensajes(res); if(window.console) console.error(e); return false; }
@@ -111,22 +118,29 @@ $('sEjemplo').addEventListener('change',function(){ var id=this.value; if(!id) r
 
 /* ---------- paso 3: ajustes ---------- */
 function pintarAjustes(){
-  $('rRitmo').value=S.ajustes.ritmo; $('oRitmo').textContent=(+S.ajustes.ritmo).toFixed(2)+' s por palabra'; $('iMarca').value=S.ajustes.marca||'';
+  $('rRitmo').value=S.ajustes.ritmo; $('oRitmo').textContent=(+S.ajustes.ritmo).toFixed(2)+' s por palabra'; $('iMarca').value=S.ajustes.marca||''; $('sMarca').value=S.ajustes.marcaModo||'lado'; if($('sMarca').selectedIndex<0) $('sMarca').value='lado';
   Object.keys(COLORES).forEach(function(id){ $(id).value=S.ajustes.paleta[COLORES[id]] || E.PALETA_BASE[COLORES[id]]; });
 }
 var pend=null;
 function aplicarAjustes(){ guardar('e3d.ajustes',S.ajustes); clearTimeout(pend); pend=setTimeout(function(){ if(S.texto) cargarTexto(S.texto,{silencio:true}); },120); }
 $('rRitmo').addEventListener('input',function(){ S.ajustes.ritmo=+this.value; $('oRitmo').textContent=(+this.value).toFixed(2)+' s por palabra'; aplicarAjustes(); });
 $('iMarca').addEventListener('input',function(){ S.ajustes.marca=this.value.trim().slice(0,28); aplicarAjustes(); });
+$('sMarca').addEventListener('change',function(){ S.ajustes.marcaModo=this.value; aplicarAjustes(); });
 Object.keys(COLORES).forEach(function(id){ $(id).addEventListener('input',function(){ S.ajustes.paleta[COLORES[id]]=this.value.toLowerCase(); aplicarAjustes(); }); });
-$('bRestablecer').addEventListener('click',function(){ S.ajustes={ ritmo:0.38, marca:'', paleta:{} }; pintarAjustes(); aplicarAjustes(); });
+$('bRestablecer').addEventListener('click',function(){ S.ajustes={ ritmo:0.38, marca:'', marcaModo:'lado', paleta:{} }; pintarAjustes(); aplicarAjustes(); });
 
 /* ---------- paso 4: exportar, narración, proyectos ---------- */
 var senal=null, urlDescarga=null;
 function pintarExportar(){
   if(!motor) return;
   $('preNarracion').textContent=motor.guion ? motor.narracion() : '';
-  if(!E.puedeExportar()){ $('bExportar').disabled=true; $('notaExp').textContent='Este navegador no puede generar el MP4. Ábrelo en Chrome o Edge.'; $('notaExp').className='nota mal'; }
+  if(!E.puedeExportar()){
+    var n=$('notaExp'); $('bExportar').disabled=true; n.className='nota mal'; n.textContent='';
+    if(window.isSecureContext===false){            // http: los navegadores solo permiten codificar video en páginas https
+      n.appendChild(document.createTextNode('Esta página se abrió por http y el navegador bloquea la exportación en conexiones no seguras. Ábrela por https: '));
+      var a=document.createElement('a'); a.href=URL_SEGURA; a.textContent=URL_SEGURA; n.appendChild(a);
+    } else n.textContent='Este navegador no puede generar el MP4. Ábrelo en Chrome o Edge actualizados.';
+  }
   pintarProyectos();
 }
 $('bExportar').addEventListener('click',function(){
